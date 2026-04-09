@@ -1,0 +1,167 @@
+// index.html
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Gabinet Masażu - Rezerwacje</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>System rezerwacji</h1>
+
+<form id="form">
+  <input id="name" placeholder="Imię" required>
+  <select id="service">
+    <option>Masaż relaksacyjny</option>
+    <option>Masaż sportowy</option>
+    <option>Masaż klasyczny</option>
+  </select>
+  <input type="date" id="date" required>
+  <input type="time" id="time" required>
+  <button type="submit">Zarezerwuj</button>
+</form>
+
+<div class="filters">
+  <button onclick="filterAll()">Wszystkie</button>
+  <button onclick="filterToday()">Dzisiaj</button>
+</div>
+
+<div class="list" id="list"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
+
+// style.css
+body {
+  font-family: Arial;
+  background: #f4f4f4;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+form {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  max-width: 400px;
+  margin: auto;
+}
+
+input, select, button {
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+}
+
+.filters {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.list {
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+.card {
+  background: white;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+}
+
+.card button {
+  background: red;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+// script.js
+class Reservation {
+  constructor(name, service, date, time) {
+    this.id = Date.now();
+    this.name = name;
+    this.service = service;
+    this.date = date;
+    this.time = time;
+  }
+}
+
+let reservations = [];
+
+const form = document.getElementById("form");
+const list = document.getElementById("list");
+
+form.addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const service = document.getElementById("service").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+
+  if (!name) {
+    alert("Podaj imię!");
+    return;
+  }
+
+  const reservation = new Reservation(name, service, date, time);
+  reservations.push(reservation);
+
+  save();
+  render(reservations);
+
+  form.reset();
+});
+
+function render(data) {
+  list.innerHTML = "";
+
+  data.forEach(r => {
+    const div = document.createElement("div");
+    div.classList.add("card");
+
+    div.innerHTML = `
+      <h3>${r.name}</h3>
+      <p>${r.service}</p>
+      <p>${r.date} ${r.time}</p>
+      <button onclick="remove(${r.id})">Usuń</button>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+function remove(id) {
+  reservations = reservations.filter(r => r.id !== id);
+  save();
+  render(reservations);
+}
+
+function filterToday() {
+  const today = new Date().toISOString().split("T")[0];
+  const filtered = reservations.filter(r => r.date === today);
+  render(filtered);
+}
+
+function filterAll() {
+  render(reservations);
+}
+
+function save() {
+  localStorage.setItem("reservations", JSON.stringify(reservations));
+}
+
+function load() {
+  const data = JSON.parse(localStorage.getItem("reservations"));
+  if (data) reservations = data;
+}
+
+load();
+render(reservations);
